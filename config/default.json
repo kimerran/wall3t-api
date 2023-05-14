@@ -1,0 +1,13 @@
+{
+    "name": "criox-wall3t",
+    "port": 52021,
+    "jwt": {
+        "expiryInSeconds": 3600,
+        "secretKey": "TOP_SECRET_DONT_SHARE"
+    },
+    "auth": {
+        "argon": {
+            "secret": "the_ultimate_topS3cr3t"
+        }
+    }
+}
