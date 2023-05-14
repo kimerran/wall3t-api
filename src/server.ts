@@ -5,7 +5,7 @@ import bodyParser from 'body-parser';
 import { DataAccess } from './data-access';
 import { sayHealthy } from './controller/healthcheck.controller';
 import { bearerTokenVerify } from './middleware/verify-auth.middleware';
-import { createUser, verifyAccount } from './controller/account.controller';
+import { createAccountToken, createUser, verifyAccount } from './controller/account.controller';
 const version = require('../package.json').version;
 
 const healthcheck = (req: Request, res: Response) => {
@@ -28,6 +28,7 @@ const initServer = (dataAccess: DataAccess) => {
 
     app.post('/account', createUser(dataAccess));
     app.get('/account/verify', verifyAccount(dataAccess));
+    app.post('/account/login', createAccountToken(dataAccess));
 
     return app;
 }
