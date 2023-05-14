@@ -9,6 +9,8 @@ const bearerTokenVerify = (req: Request, res: Response, next: NextFunction) => {
         if (token) {
             const result = verifyToken(token);
             if (result) {
+                res.locals.token = token;
+                res.locals.tokenPayload = result;
                 return next()
             }
             res.status(401).send('Unauthorized')

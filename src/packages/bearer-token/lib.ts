@@ -15,7 +15,6 @@ const createToken = (payload: any) => {
 }
 
 const verifyToken = (token: string) => {
-    console.log('token')
     return jwt.verify(token, jwtKey);
 }
 

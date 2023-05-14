@@ -5,7 +5,7 @@ import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import { logger } from '../packages/logger/lib';
 import { composeWallet, createWallet } from '../packages/email-wallets/lib';
-import { createToken } from '../packages/bearer-token/lib';
+import { createToken, verifyToken } from '../packages/bearer-token/lib';
 
 export type ArgonAuthConfig = {
     secret: string
@@ -38,12 +38,15 @@ const createUser = (dataAccess: DataAccess) => async (req: Request, res: Respons
 
         Account.create(newUser)
             .then((result: any) => {
-                console.log('result', result)
                 if (result) {
                     result.password = "**REDACTED**"
-                    res.json('User has been created');
+                    res.json({
+                        msg: 'User has been created',
+                        verifyHash,
+                        activateUrl: `/account/activate?id=${verifyHash}`,
+                    });
                 } else {
-                    res.status(500).send('Creation ont success')
+                    res.status(500).send('Creation failed')
                 }
 
             })
@@ -57,7 +60,7 @@ const createUser = (dataAccess: DataAccess) => async (req: Request, res: Respons
                 res.status(500).send(errDetails)
             })
     } catch (error) {
-        console.log('error', error);
+        console.error('error', error);
         throw error;
     }
 }
@@ -92,6 +95,7 @@ const verifyAccount = (dataAccess: DataAccess) => async (req: VerifyAccountReque
                 payload: {
                     walletPhrase: newWallet.phrase,
                     walletAddress: newWallet.address,
+                    walletPhraseArray: newWallet.phrase.split(':'),
                     userWord: newWallet.userWord,
                     index: newWallet.index,
                 }
@@ -101,7 +105,7 @@ const verifyAccount = (dataAccess: DataAccess) => async (req: VerifyAccountReque
             res.status(400).send('Unable to verify');
         }
     } catch (error) {
-        console.log('error', error);
+        console.error('error', error);
         res.status(500).send('Error');
     }
 }
@@ -130,7 +134,7 @@ const createAccountToken = (dataAccess: DataAccess) => async (req: Request, res:
                     const authPayload = {
                         uid: match.get('id'),
                         eml: email,
-                        uwd: userword,
+                        uwd: Buffer.from(userword).toString('base64'),
                         evw: wallet.address,
                     }
                     const token = createToken(authPayload);
@@ -150,8 +154,13 @@ const createAccountToken = (dataAccess: DataAccess) => async (req: Request, res:
     }
 }
 
+const verifyAccountToken = () => async (req: Request, res: Response) => {
+    res.json(res.locals.tokenPayload);
+}
+
 export {
     createUser,
     verifyAccount,
     createAccountToken,
+    verifyAccountToken,
 }
